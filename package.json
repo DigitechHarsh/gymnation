@@ -1,0 +1,24 @@
+{
+  "name": "gymnation-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GymNation – The Fitness Hub: Production Gym Website & Single-Vendor Supplement E-Commerce",
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:web": "npm run dev --prefix frontend/web",
+    "dev:admin": "npm run dev --prefix frontend/admin",
+    "build:backend": "npm run build --prefix backend",
+    "build:web": "npm run build --prefix frontend/web",
+    "build:admin": "npm run build --prefix frontend/admin"
+  },
+  "keywords": [
+    "gymnation",
+    "fitness",
+    "ecommerce",
+    "nextjs",
+    "express",
+    "prisma",
+    "postgresql"
+  ],
+  "author": "GymNation Surat"
+}

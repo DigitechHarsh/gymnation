@@ -1,0 +1,41 @@
+import { z } from 'zod';
+
+export const mediaObjectSchema = z.object({
+  url: z.string().url().or(z.string().startsWith('/')),
+  publicId: z.string(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  alt: z.string().optional(),
+  format: z.string().optional(),
+  bytes: z.number().optional(),
+});
+
+export const updateSettingsSchema = z.object({
+  gymName: z.string().min(2).optional(),
+  tagline: z.string().optional(),
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  email: z.string().email().optional(),
+  address: z.string().optional(),
+  mapEmbedUrl: z.string().optional(),
+  workingHours: z.string().optional(),
+  logo: mediaObjectSchema.nullable().optional(),
+  favicon: mediaObjectSchema.nullable().optional(),
+  socialLinks: z.record(z.string()).nullable().optional(),
+  defaultSeoTitle: z.string().nullable().optional(),
+  defaultSeoDescription: z.string().nullable().optional(),
+  defaultOgImage: mediaObjectSchema.nullable().optional(),
+  footerText: z.string().nullable().optional(),
+  globalOverlayOpacity: z.number().min(0).max(1).optional(),
+  codEnabled: z.boolean().optional(),
+  codFee: z.number().min(0).optional(),
+  codMaxOrderValue: z.number().min(0).optional(),
+  freeShippingThreshold: z.number().min(0).optional(),
+  flatShippingFee: z.number().min(0).optional(),
+  gstNumber: z.string().nullable().optional(),
+  storePickupEnabled: z.boolean().optional(),
+  storePickupAddress: z.string().nullable().optional(),
+  marqueeEnabled: z.boolean().optional(),
+  marqueeSpeed: z.number().min(5).max(100).optional(),
+  marqueeBgColor: z.string().optional(),
+});

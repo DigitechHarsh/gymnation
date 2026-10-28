@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0B0A0A;
+  --foreground: #F4EFE8;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-manrope), sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure headings have crisp letter spacing and balanced weight */
+.font-heading {
+  letter-spacing: 0.03em;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: #2E2627;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7A1F25;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Pulse glow animation */
+@keyframes goldPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(242, 185, 29, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(242, 185, 29, 0.5);
+  }
+}
+
+.glow-gold {
+  animation: goldPulse 3s ease-in-out infinite;
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideRight {
+  animation: slideRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

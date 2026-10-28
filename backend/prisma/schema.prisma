@@ -1,0 +1,607 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MANAGER
+  STAFF
+}
+
+enum MediaBgType {
+  VIDEO
+  IMAGE
+}
+
+enum GalleryType {
+  IMAGE
+  VIDEO
+}
+
+enum CouponType {
+  PERCENT
+  FLAT
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURNED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  ONLINE
+  COD
+  STORE_PICKUP
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum MembershipSource {
+  ONLINE
+  WALK_IN
+}
+
+enum LeadSource {
+  CONTACT
+  HERO
+  CTA_BAND
+  FREE_TRIAL
+  POPUP
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+model AdminUser {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         AdminRole  @default(STAFF)
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  auditLogs    AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model SiteSetting {
+  id                    String   @id @default("singleton")
+  gymName               String   @default("GymNation – The Fitness Hub")
+  tagline               String   @default("Discipline Builds Freedom")
+  phone                 String   @default("+91 98765 43210")
+  whatsapp              String   @default("+91 98765 43210")
+  email                 String   @default("info@gymnation.in")
+  address               String   @default("Adajan, Surat, Gujarat 395009, India")
+  mapEmbedUrl           String   @default("https://maps.google.com/maps?q=Surat,Gujarat&t=&z=13&ie=UTF8&iwloc=&output=embed")
+  workingHours          String   @default("Mon - Sat: 5:30 AM – 10:30 PM | Sun: 6:00 AM – 12:00 PM")
+  logo                  Json?
+  favicon               Json?
+  socialLinks           Json?
+  defaultSeoTitle       String?  @default("GymNation – The Fitness Hub | Premium Gym & Supplements in Surat")
+  defaultSeoDescription String?  @default("Surat's premier fitness hub. High performance training floor, international equipment, certified trainers, and authentic nutritional supplements.")
+  defaultOgImage        Json?
+  footerText            String?  @default("© 2026 GymNation – The Fitness Hub. All rights reserved.")
+  globalOverlayOpacity  Float    @default(0.55)
+  codEnabled            Boolean  @default(true)
+  codFee                Int      @default(0) // in paise
+  codMaxOrderValue      Int      @default(1000000) // in paise (₹10,000)
+  freeShippingThreshold Int      @default(99900) // in paise (₹999)
+  flatShippingFee       Int      @default(9900) // in paise (₹99)
+  gstNumber             String?  @default("24AAAAA0000A1Z5")
+  storePickupEnabled    Boolean  @default(true)
+  storePickupAddress    String?  @default("GymNation Floor 2, Fitness Boulevard, Adajan, Surat, Gujarat 395009")
+  marqueeEnabled        Boolean  @default(true)
+  marqueeSpeed          Int      @default(30)
+  marqueeBgColor        String   @default("#7A1F25")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model HeroSlide {
+  id                 String      @id @default(cuid())
+  eyebrow            String      @default("SURAT'S FITNESS HUB")
+  heading            String      @default("DISCIPLINE BUILDS")
+  cursiveWord        String      @default("Freedom")
+  subText            String      @default("Stronger people. A stronger tomorrow.")
+  ctaPrimaryLabel    String      @default("SHOP NOW")
+  ctaPrimaryHref     String      @default("/products")
+  ctaSecondaryLabel  String      @default("JOIN MEMBERSHIP")
+  ctaSecondaryHref   String      @default("/membership")
+  rightImage         Json?       // media object: { url, publicId, width, height, alt }
+  bgType             MediaBgType @default(VIDEO)
+  bgMedia            Json?       // media object
+  bgPoster           Json?       // media object
+  overlayOpacity     Float       @default(0.55)
+  offerBadgeText     String?     @default("FLAT 30% OFF")
+  offerBadgeSubtext  String?     @default("ON ALL SUPPLEMENTS")
+  isActive           Boolean     @default(true)
+  sortOrder          Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model MarqueeOffer {
+  id        String   @id @default(cuid())
+  text      String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model PageSection {
+  id          String   @id @default(cuid())
+  pageSlug    String   // "about-us", "why-us", "home", "contact"
+  sectionKey  String   // e.g. "story", "vision", "mission", "cta_band"
+  title       String
+  cursiveWord String?
+  body        String   @db.Text
+  media       Json?    // media array
+  ctaLabel    String?
+  ctaHref     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([pageSlug, sectionKey])
+  @@index([pageSlug, isActive, sortOrder])
+}
+
+model WhyUsItem {
+  id          String   @id @default(cuid())
+  number      String   // "01", "02", "03"
+  title       String
+  description String   @db.Text
+  media       Json?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Stat {
+  id        String   @id @default(cuid())
+  label     String   // "MEMBERS", "TRAINERS", "SQ. FT.", "YEARS"
+  value     String   // "1500", "25", "15", "8"
+  suffix    String   // "+", "+", "K", "+"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model GalleryItem {
+  id        String      @id @default(cuid())
+  type      GalleryType @default(IMAGE)
+  media     Json        // { url, publicId, width, height, alt }
+  caption   String
+  category  String      @default("EQUIPMENT") // EQUIPMENT, WORKOUTS, MEMBERS, EVENTS
+  sortOrder Int         @default(0)
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([category, isActive, sortOrder])
+}
+
+model MembershipPlan {
+  id            String               @id @default(cuid())
+  name          String
+  slug          String               @unique
+  price         Int                  // in paise (e.g. 249900 = ₹2,499)
+  mrp           Int                  // in paise
+  durationDays  Int                  @default(30)
+  durationLabel String               @default("per month")
+  features      String[]
+  isPopular     Boolean              @default(false)
+  isActive      Boolean              @default(true)
+  sortOrder     Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  purchases     MembershipPurchase[]
+
+  @@index([isActive, sortOrder])
+}
+
+model MembershipPurchase {
+  id          String           @id @default(cuid())
+  planId      String
+  plan        MembershipPlan   @relation(fields: [planId], references: [id])
+  name        String
+  phone       String
+  email       String
+  startDate   DateTime
+  endDate     DateTime
+  status      MembershipStatus @default(ACTIVE)
+  paymentId   String?
+  source      MembershipSource @default(ONLINE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([phone])
+  @@index([status])
+  @@index([planId])
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String   // e.g. "Fat Loss 18kg in 6 Months" or "Strength Athlete"
+  quote     String   @db.Text
+  photo     Json?
+  rating    Int      @default(5)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  category  String   @default("GENERAL")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, isActive, sortOrder])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  image       Json?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([slug])
+  @@index([isActive, sortOrder])
+}
+
+model Product {
+  id               String           @id @default(cuid())
+  name             String
+  slug             String           @unique
+  brand            String           @default("GymNation Nutrition")
+  shortDescription String           @db.Text
+  description      String           @db.Text
+  categoryId       String
+  category         Category         @relation(fields: [categoryId], references: [id])
+  price            Int              // Base price in paise for display (e.g. 399900)
+  mrp              Int              // MRP in paise
+  sku              String           @unique
+  hsnCode          String           @default("21069099")
+  gstRate          Float            @default(18.0) // 18% GST standard for supplements
+  weightGrams      Int              @default(1000)
+  lengthCm         Float            @default(15)
+  breadthCm        Float            @default(15)
+  heightCm         Float            @default(25)
+  images           Json             // Array of media objects
+  badge            String?          // e.g. "-17%", "BESTSELLER", "NEW"
+  isFeatured       Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  seoTitle         String?
+  seoDescription   String?
+  deletedAt        DateTime?        // Soft delete
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  variants         ProductVariant[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isFeatured, isActive])
+  @@index([deletedAt])
+}
+
+model SlugRedirect {
+  id         String   @id @default(cuid())
+  oldSlug    String   @unique
+  newSlug    String
+  entityType String   @default("PRODUCT") // PRODUCT, CATEGORY
+  createdAt  DateTime @default(now())
+
+  @@index([oldSlug])
+}
+
+model ProductVariant {
+  id          String      @id @default(cuid())
+  productId   String
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label       String      // e.g. "Chocolate / 1 kg"
+  flavour     String?
+  size        String?
+  sku         String      @unique
+  price       Int         // in paise
+  mrp         Int         // in paise
+  stock       Int         @default(0)
+  weightGrams Int         @default(1000)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@index([productId])
+  @@index([sku])
+  @@index([stock])
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String?
+  passwordHash String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  addresses    Address[]
+  orders       Order[]
+  cart         Cart?
+
+  @@index([email])
+  @@index([phone])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name       String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  pincode    String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+}
+
+model Cart {
+  id         String     @id @default(cuid())
+  customerId String     @unique
+  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  items      CartItem[]
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  cartId    String
+  cart      Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  qty       Int            @default(1)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([cartId, variantId])
+}
+
+model Coupon {
+  id            String     @id @default(cuid())
+  code          String     @unique
+  type          CouponType @default(PERCENT)
+  value         Int        // 25 for 25% or amount in paise for FLAT
+  minOrderValue Int        @default(0) // in paise
+  maxDiscount   Int?       // in paise (e.g. 50000 = ₹500 cap)
+  usageLimit    Int?       // null = unlimited
+  usedCount     Int        @default(0)
+  perUserLimit  Int        @default(1)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model Order {
+  id                 String        @id @default(cuid())
+  orderNumber        String        @unique // GN-2026-000123
+  customerId         String?
+  customer           Customer?     @relation(fields: [customerId], references: [id])
+  guestEmail         String?
+  guestPhone         String?
+  shippingAddress    Json          // Address snapshot
+  billingAddress     Json          // Address snapshot
+  subtotal           Int           // in paise
+  discount           Int           @default(0) // in paise
+  shippingFee        Int           @default(0) // in paise
+  taxAmount          Int           @default(0) // in paise (total GST)
+  total              Int           // in paise
+  couponCode         String?
+  status             OrderStatus   @default(PENDING_PAYMENT)
+  paymentStatus      PaymentStatus @default(PENDING)
+  paymentMethod      PaymentMethod @default(ONLINE)
+  notes              String?
+  invoiceNumber      String?
+  invoiceUrl         String?
+  stockReservedUntil DateTime?     // 15-minute lock on checkout creation
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  items              OrderItem[]
+  payments           Payment[]
+  shipment           Shipment?
+
+  @@index([orderNumber])
+  @@index([customerId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id            String          @id @default(cuid())
+  orderId       String
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId     String?
+  variant       ProductVariant? @relation(fields: [variantId], references: [id])
+  nameSnapshot  String
+  skuSnapshot   String
+  priceSnapshot Int             // in paise
+  qty           Int
+  gstRate       Float           @default(18.0)
+  cgstAmount    Int             @default(0) // intra-state Gujarat
+  sgstAmount    Int             @default(0) // intra-state Gujarat
+  igstAmount    Int             @default(0) // inter-state
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider          String   @default("RAZORPAY")
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  signature         String?
+  amount            Int      // in paise
+  currency          String   @default("INR")
+  status            String   // PENDING, CAPTURED, FAILED, REFUNDED
+  rawPayload        Json?
+  refundId          String?
+  refundAmount      Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([razorpayOrderId])
+  @@index([razorpayPaymentId])
+}
+
+model Shipment {
+  id                 String    @id @default(cuid())
+  orderId            String    @unique
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shiprocketOrderId  String?
+  shipmentId         String?
+  awb                String?
+  courierName        String?
+  status             String    @default("NEW")
+  trackingUrl        String?
+  labelUrl           String?
+  manifestUrl        String?
+  events             Json?
+  pickupScheduledAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([orderId])
+  @@index([awb])
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  name       String
+  phone      String
+  email      String?
+  message    String?    @db.Text
+  goal       String?
+  source     LeadSource @default(CONTACT)
+  status     LeadStatus @default(NEW)
+  assignedTo String?
+  notes      String?    @db.Text
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model AuditLog {
+  id          String     @id @default(cuid())
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+  action      String     // CREATE, UPDATE, DELETE, LOGIN, STATUS_CHANGE
+  entity      String     // PRODUCT, ORDER, HERO_SLIDE, SETTINGS, etc.
+  entityId    String?
+  diff        Json?
+  ip          String?
+  createdAt   DateTime   @default(now())
+
+  @@index([adminUserId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model MediaItem {
+  id        String   @id @default(cuid())
+  url       String
+  publicId  String   @unique
+  format    String?
+  width     Int?
+  height    Int?
+  bytes     Int?
+  alt       String?
+  folder    String   @default("gymnation")
+  createdAt DateTime @default(now())
+
+  @@index([publicId])
+}
